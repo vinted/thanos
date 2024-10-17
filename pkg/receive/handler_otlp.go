@@ -103,9 +103,16 @@ func (h *Handler) receiveOTLPHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	//TODO: (nicolastakashi) Handle metadata in the future.
 	wreq := tprompb.WriteRequest{
 		Timeseries: metrics,
+	}
+
+	//TODO: (nicolastakashi) Handle metadata in the future.
+	wr := []wreqTenantTuple{
+		{
+			tenant: tenant,
+			wreq:   &wreq,
+		},
 	}
 
 	// Exit early if the request contained no data. We don't support metadata yet. We also cannot fail here, because
@@ -129,7 +136,7 @@ func (h *Handler) receiveOTLPHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	responseStatusCode := http.StatusOK
-	tenantStats, err := h.handleRequest(ctx, rep, tenant, &wreq)
+	tenantStats, err := h.handleRequest(ctx, rep, wr)
 	if err != nil {
 		level.Debug(tLogger).Log("msg", "failed to handle request", "err", err.Error())
 		switch errors.Cause(err) {
