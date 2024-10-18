@@ -70,12 +70,36 @@ func (r *RemoteWriteClient) writeWithReconnect(ctx context.Context, numReconnect
 		return nil, err
 	}
 
+	arena := capnp.SingleSegment(nil)
+	defer arena.Release()
+
 	result, release := r.writer.Write(ctx, func(params Writer_write_Params) error {
-		wr, err := params.NewWr()
+		_, seg, err := capnp.NewMessage(arena)
 		if err != nil {
 			return err
 		}
-		return BuildInto(wr, in.Tenant, in.Timeseries)
+		wr, err := NewRootWriteRequest(seg)
+		if err != nil {
+			return err
+		}
+		if err := params.SetWr(wr); err != nil {
+			return err
+		}
+
+		tl, err := NewTimeSeriesTenantTuple_List(seg, int32(len(in.TimeseriesTenantData)))
+		if err != nil {
+			return err
+		}
+		if err := wr.SetData(tl); err != nil {
+			return err
+		}
+
+		for i, d := range in.TimeseriesTenantData {
+			if err := BuildInto(tl.At(i), d.Tenant, d.Timeseries); err != nil {
+				return err
+			}
+		}
+		return nil
 	})
 	defer release()
 
