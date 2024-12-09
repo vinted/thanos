@@ -117,6 +117,7 @@ require (
 )
 
 require (
+	github.com/segmentio/fasthash v1.0.3
 	github.com/tjhop/slog-gokit v0.1.3
 	go.opentelemetry.io/collector/pdata v1.22.0
 	go.opentelemetry.io/collector/semconv v0.116.0
