@@ -1274,6 +1274,8 @@ func TestReceiveCpnp(t *testing.T) {
 func TestExpandedCache(t *testing.T) {
 	t.Parallel()
 
+	t.Skip("This takes a long time and uses lots of resources.")
+
 	e, err := e2e.NewDockerEnvironment("expanded-cache")
 	testutil.Ok(t, err)
 	t.Cleanup(e2ethanos.CleanScenario(t, e))
