@@ -60,7 +60,7 @@ func TestReaders(t *testing.T) {
 		labels.FromStrings("cluster", "a-eu-west-1"),
 		labels.FromStrings("cluster", "b-eu-west-1"),
 		labels.FromStrings("cluster", "c-eu-west-1"),
-	}, 100, 0, 1000, labels.FromStrings("ext1", "1"), 124, metadata.NoneFunc)
+	}, 100, 0, 1000, labels.FromStrings("ext1", "1"), 124, metadata.NoneFunc, nil)
 	testutil.Ok(t, err)
 
 	testutil.Ok(t, block.Upload(ctx, log.NewNopLogger(), bkt, filepath.Join(tmpDir, id1.String()), metadata.NoneFunc))
@@ -457,7 +457,7 @@ func benchmarkBinaryReaderLookupSymbol(b *testing.B, numSeries int) {
 	}
 
 	// Create a block.
-	id1, err := e2eutil.CreateBlock(ctx, tmpDir, seriesLabels, 100, 0, 1000, labels.FromStrings("ext1", "1"), 124, metadata.NoneFunc)
+	id1, err := e2eutil.CreateBlock(ctx, tmpDir, seriesLabels, 100, 0, 1000, labels.FromStrings("ext1", "1"), 124, metadata.NoneFunc, nil)
 	testutil.Ok(b, err)
 	testutil.Ok(b, block.Upload(ctx, logger, bkt, filepath.Join(tmpDir, id1.String()), metadata.NoneFunc))
 
@@ -591,7 +591,7 @@ func TestReaderPostingsOffsets(t *testing.T) {
 	bkt, err := filesystem.NewBucket(filepath.Join(tmpDir, "bkt"))
 	testutil.Ok(t, err)
 	defer func() { testutil.Ok(t, bkt.Close()) }()
-	id, err := e2eutil.CreateBlock(ctx, tmpDir, lbls, 100, 0, 1000, labels.FromStrings("ext1", "1"), 124, metadata.NoneFunc)
+	id, err := e2eutil.CreateBlock(ctx, tmpDir, lbls, 100, 0, 1000, labels.FromStrings("ext1", "1"), 124, metadata.NoneFunc, nil)
 	testutil.Ok(t, err)
 
 	testutil.Ok(t, block.Upload(ctx, log.NewNopLogger(), bkt, filepath.Join(tmpDir, id.String()), metadata.NoneFunc))

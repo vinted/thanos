@@ -652,7 +652,7 @@ func TestQueryStoreMetrics(t *testing.T) {
 				30*time.Minute,
 				externalLabels,
 				0,
-				metadata.NoneFunc,
+				metadata.NoneFunc, nil,
 			)
 			testutil.Ok(t, err)
 			testutil.Ok(t, objstore.UploadDir(ctx, l, bkt, path.Join(dir, blockID.String()), blockID.String()))
@@ -1012,7 +1012,7 @@ func createSimpleReplicatedBlocksInS3(
 			30*time.Minute,
 			s.extLabels,
 			0,
-			metadata.NoneFunc,
+			metadata.NoneFunc, nil,
 		)
 		testutil.Ok(t, err)
 		blockPath := path.Join(dir, blockID.String())
@@ -2059,7 +2059,7 @@ func TestQueryTenancyEnforcement(t *testing.T) {
 		30*time.Minute,
 		tenantLabel01,
 		0,
-		metadata.NoneFunc,
+		metadata.NoneFunc, nil,
 	)
 	testutil.Ok(t, err)
 
@@ -2072,7 +2072,7 @@ func TestQueryTenancyEnforcement(t *testing.T) {
 		30*time.Minute,
 		tenantLabel02,
 		0,
-		metadata.NoneFunc,
+		metadata.NoneFunc, nil,
 	)
 	testutil.Ok(t, err)
 
@@ -2085,7 +2085,7 @@ func TestQueryTenancyEnforcement(t *testing.T) {
 		30*time.Minute,
 		tenantLabel03,
 		0,
-		metadata.NoneFunc,
+		metadata.NoneFunc, nil,
 	)
 	testutil.Ok(t, err)
 
