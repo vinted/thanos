@@ -23,7 +23,7 @@ func GetMetaLabelsAndChunks(t *testing.T, dir string, id ulid.ULID) (*metadata.M
 	meta, err := metadata.ReadFromDir(filepath.Join(dir, id.String()))
 	testutil.Ok(t, err)
 
-	indexr, err := index.NewFileReader(filepath.Join(dir, id.String(), block.IndexFilename), index.DecodePostingsRaw)
+	indexr, err := index.NewFileReader(filepath.Join(dir, id.String(), block.IndexFilename))
 	testutil.Ok(t, err)
 	defer func() { testutil.Ok(t, indexr.Close()) }()
 

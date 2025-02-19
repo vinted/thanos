@@ -31,7 +31,6 @@ import (
 
 	"github.com/thanos-io/thanos/pkg/block"
 	"github.com/thanos-io/thanos/pkg/block/metadata"
-	"github.com/thanos-io/thanos/pkg/logutil"
 	"github.com/thanos-io/thanos/pkg/testutil/custom"
 	"github.com/thanos-io/thanos/pkg/testutil/testiters"
 )
@@ -111,7 +110,7 @@ func TestDownsampleNativeHistograms(t *testing.T) {
 		_, err = metadata.ReadFromDir(filepath.Join(dir, id.String()))
 		testutil.Ok(t, err)
 
-		indexr, err := index.NewFileReader(filepath.Join(dir, id.String(), block.IndexFilename), index.DecodePostingsRaw)
+		indexr, err := index.NewFileReader(filepath.Join(dir, id.String(), block.IndexFilename))
 		testutil.Ok(t, err)
 		defer func() { testutil.Ok(t, indexr.Close()) }()
 
@@ -2527,7 +2526,7 @@ func TestDownSampleNativeHistogram(t *testing.T) {
 				compareAggreggates(t, dir, ResLevel1, idResLevel1.String(), tt.expectedReseLevel1, chks[0])
 			}
 
-			blk, err := tsdb.OpenBlock(logutil.GoKitLogToSlog(log.NewNopLogger()), filepath.Join(dir, idResLevel1.String()), NewPool(), tsdb.DefaultPostingsDecoderFactory)
+			blk, err := tsdb.OpenBlock(log.NewNopLogger(), filepath.Join(dir, idResLevel1.String()), NewPool())
 			testutil.Ok(t, err)
 			idResLevel2, err := Downsample(context.Background(), logger, meta, blk, dir, ResLevel2)
 			testutil.Ok(t, err)
@@ -2628,7 +2627,7 @@ func TestDownsampleMixedChunkTypes(t *testing.T) {
 		},
 	}, chks[0])
 
-	blk, err := tsdb.OpenBlock(logutil.GoKitLogToSlog(log.NewNopLogger()), filepath.Join(dir, idResLevel1.String()), NewPool(), tsdb.DefaultPostingsDecoderFactory)
+	blk, err := tsdb.OpenBlock(log.NewNopLogger(), filepath.Join(dir, idResLevel1.String()), NewPool())
 	testutil.Ok(t, err)
 	idResLevel2, err := Downsample(context.Background(), logger, meta, blk, dir, ResLevel2)
 	testutil.Ok(t, err)
