@@ -9,6 +9,7 @@ import (
 	spb "github.com/gogo/googleapis/google/rpc"
 	"github.com/gogo/protobuf/types"
 	"github.com/gogo/status"
+	"github.com/opentracing/opentracing-go"
 	grpc "google.golang.org/grpc"
 )
 
@@ -49,6 +50,12 @@ func (s *HTTPGRPCServer) Handle(ctx context.Context, r *HTTPRequest) (*HTTPRespo
 	if err != nil {
 		return nil, err
 	}
+
+	span := opentracing.SpanFromContext(ctx)
+	if span != nil {
+		span.Tracer().Inject(span.Context(), opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(req.Header))
+	}
+
 	req = req.WithContext(ctx)
 	req.RequestURI = r.Url
 	req.ContentLength = int64(len(r.Body))
