@@ -1,3 +1,6 @@
+// Copyright (c) The Thanos Authors.
+// Licensed under the Apache License 2.0.
+
 package queryfrontend
 
 import (
@@ -40,7 +43,7 @@ func fromHeader(hs http.Header) []*Header {
 
 func (nopCloser) Close() error { return nil }
 
-// BytesBuffer returns the underlaying `bytes.buffer` used to build this io.ReadCloser.
+// BytesBuffer returns the underlying `bytes.buffer` used to build this io.ReadCloser.
 func (n nopCloser) BytesBuffer() *bytes.Buffer { return n.Buffer }
 
 var _ HTTPServer = &HTTPGRPCServer{}
@@ -53,7 +56,7 @@ func (s *HTTPGRPCServer) Handle(ctx context.Context, r *HTTPRequest) (*HTTPRespo
 
 	span := opentracing.SpanFromContext(ctx)
 	if span != nil {
-		span.Tracer().Inject(span.Context(), opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(req.Header))
+		_ = span.Tracer().Inject(span.Context(), opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(req.Header))
 	}
 
 	req = req.WithContext(ctx)

@@ -385,7 +385,7 @@ func runQueryFrontend(
 		srv.Handle("/", instrumentedHandler)
 
 		g.Add(func() error {
-			statusProber.Healthy()
+			httpProbe.Ready()
 
 			return srv.ListenAndServe()
 		}, func(err error) {
@@ -414,11 +414,12 @@ func runQueryFrontend(
 		)
 
 		g.Add(func() error {
-			statusProber.Ready()
+			grpcProbe.Ready()
 
 			return s.ListenAndServe()
 		}, func(error) {
 			statusProber.NotReady(err)
+			defer statusProber.NotHealthy(err)
 			s.Shutdown(err)
 		})
 	}
