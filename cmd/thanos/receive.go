@@ -491,7 +491,7 @@ func runReceive(
 		capNProtoWriter := receive.NewCapNProtoWriter(logger, dbs, &receive.CapNProtoWriterOptions{
 			TooFarInFutureTimeWindow: int64(time.Duration(*conf.tsdbTooFarInFutureTimeWindow)),
 		})
-		handler := receive.NewCapNProtoHandler(logger, capNProtoWriter)
+		handler := receive.NewCapNProtoHandler(reg, logger, capNProtoWriter)
 		listener, err := net.Listen("tcp", conf.replicationAddr)
 		if err != nil {
 			return err
@@ -593,7 +593,7 @@ func setupHashring(g *run.Group,
 					webHandler.Hashring(receive.SingleNodeHashring(conf.endpoint))
 					level.Info(logger).Log("msg", "Empty hashring config. Set up single node hashring.")
 				} else {
-					h, err := receive.NewMultiHashring(algorithm, conf.replicationFactor, c)
+					h, err := receive.NewMultiHashring(algorithm, conf.replicationFactor, c, reg)
 					if err != nil {
 						return errors.Wrap(err, "unable to create new hashring from config")
 					}
@@ -917,7 +917,7 @@ type receiveConfig struct {
 
 func (rc *receiveConfig) registerFlag(cmd extkingpin.FlagClause) {
 	rc.httpBindAddr, rc.httpGracePeriod, rc.httpTLSConfig = extkingpin.RegisterHTTPFlags(cmd)
-	rc.grpcConfig.registerFlag(cmd)
+	rc.grpcConfig.registerFlag(cmd, false)
 	rc.storeRateLimits.RegisterFlags(cmd)
 
 	cmd.Flag("remote-write.address", "Address to listen on for remote write requests.").

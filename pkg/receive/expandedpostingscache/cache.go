@@ -14,8 +14,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cespare/xxhash/v2"
 	"github.com/oklog/ulid"
+	"github.com/segmentio/fasthash/fnv1a"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
@@ -53,8 +53,8 @@ var (
 
 const (
 	// size of the seed array. Each seed is a 64bits int (8 bytes)
-	// totaling 8mb.
-	seedArraySize = 1024 * 1024
+	// totaling 16mb.
+	seedArraySize = 4 * 1024 * 1024
 
 	numOfSeedsStripes = 512
 )
@@ -131,7 +131,7 @@ func (c *BlocksPostingsForMatchersCache) ExpireSeries(metric labels.Labels) {
 		return
 	}
 
-	h := MemHashString(metricName)
+	h := memHashString(metricName)
 	i := h % uint64(len(c.headSeedByMetricName))
 	l := i % uint64(len(c.strippedLock))
 	c.strippedLock[l].Lock()
@@ -202,7 +202,7 @@ func (c *BlocksPostingsForMatchersCache) result(ce *cacheEntryPromise[[]storage.
 }
 
 func (c *BlocksPostingsForMatchersCache) getSeedForMetricName(metricName string) string {
-	h := MemHashString(metricName)
+	h := memHashString(metricName)
 	i := h % uint64(len(c.headSeedByMetricName))
 	l := i % uint64(len(c.strippedLock))
 	c.strippedLock[l].RLock()
@@ -253,13 +253,17 @@ func isHeadBlock(blockID ulid.ULID) bool {
 }
 
 func metricNameFromMatcher(ms []*labels.Matcher) (string, bool) {
+	var metricName string
 	for _, m := range ms {
 		if m.Name == labels.MetricName && m.Type == labels.MatchEqual {
-			return m.Value, true
+			if metricName != "" {
+				return "", false
+			}
+			metricName = m.Value
 		}
 	}
 
-	return "", false
+	return metricName, metricName != ""
 }
 
 // TODO(GiedriusS): convert Thanos caching system to be promised-based
@@ -324,6 +328,7 @@ func (c *fifoCache[V]) getPromiseForKey(k string, fetch func() (V, int64, error)
 		r.ts = c.timeNow()
 		c.created(k, r.sizeBytes)
 		c.expire()
+		loaded = r
 	}
 
 	if ok {
@@ -413,6 +418,6 @@ func (ce *cacheEntryPromise[V]) isExpired(ttl time.Duration, now time.Time) bool
 	return r >= ttl
 }
 
-func MemHashString(str string) uint64 {
-	return xxhash.Sum64String(str)
+func memHashString(str string) uint64 {
+	return fnv1a.HashString64(str)
 }

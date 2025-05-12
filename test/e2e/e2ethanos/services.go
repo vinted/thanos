@@ -684,8 +684,8 @@ func (r *ReceiveBuilder) Init() *e2eobs.Observable {
 	}
 
 	if r.expandedPostingsCache {
-		args["--tsdb.head.expanded-postings-cache-size"] = "1000"
-		args["--tsdb.block.expanded-postings-cache-size"] = "1000"
+		args["--tsdb.head.expanded-postings-cache-size"] = "10"
+		args["--tsdb.block.expanded-postings-cache-size"] = "10"
 	}
 
 	if r.limit != 0 && r.metaMonitoring != "" {

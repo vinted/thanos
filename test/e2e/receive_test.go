@@ -7,13 +7,16 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"math/rand"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
+	"github.com/cortexproject/promqlsmith"
 	"github.com/efficientgo/core/backoff"
 	"github.com/efficientgo/e2e"
 	e2edb "github.com/efficientgo/e2e/db"
@@ -26,6 +29,7 @@ import (
 	config_util "github.com/prometheus/common/config"
 	"github.com/prometheus/common/model"
 
+	"github.com/prometheus/prometheus/model/labels"
 	"github.com/prometheus/prometheus/model/relabel"
 	"github.com/prometheus/prometheus/model/timestamp"
 	"github.com/prometheus/prometheus/prompb"
@@ -1205,6 +1209,115 @@ func TestReceiveExtractsTenant(t *testing.T) {
 	})
 }
 
+func TestReceiveMultipleTenants(t *testing.T) {
+	t.Run("proto", func(t *testing.T) {
+		e, err := e2e.NewDockerEnvironment("receive-mptenant")
+		testutil.Ok(t, err)
+		t.Cleanup(e2ethanos.CleanScenario(t, e))
+
+		i := e2ethanos.NewReceiveBuilder(e, "ingestor").WithIngestionEnabled().Init()
+		testutil.Ok(t, e2e.StartAndWaitReady(i))
+
+		h := receive.HashringConfig{
+			TenantMatcherType: "glob",
+			Tenants: []string{
+				"foo*",
+			},
+			Endpoints: []receive.Endpoint{
+				{Address: i.InternalEndpoint("grpc"), CapNProtoAddress: i.InternalEndpoint("capnp")},
+			},
+		}
+
+		r := e2ethanos.NewReceiveBuilder(e, "router").WithRouting(1, h).Init()
+		testutil.Ok(t, e2e.StartAndWaitReady(r))
+
+		ts := time.Now()
+
+		var attempts int
+		require.NoError(t, runutil.RetryWithLog(logkit.NewLogfmtLogger(os.Stdout), 1*time.Second, make(<-chan struct{}), func() error {
+			attempts++
+			return storeWriteRequest(context.Background(), "http://"+r.Endpoint("remote-write")+"/api/v1/receive", &prompb.WriteRequest{
+				Timeseries: []prompb.TimeSeries{
+					{
+						Labels: []prompb.Label{
+							{Name: model.MetricNameLabel, Value: "myself"},
+							{Name: "thanos_tenant_id", Value: "foobar"},
+						},
+						Samples: []prompb.Sample{
+							{Value: 1, Timestamp: timestamp.FromTime(ts)},
+						},
+					},
+					{
+						Labels: []prompb.Label{
+							{Name: model.MetricNameLabel, Value: "myself"},
+							{Name: "thanos_tenant_id", Value: "foobaq"},
+						},
+						Samples: []prompb.Sample{
+							{Value: 1, Timestamp: timestamp.FromTime(ts)},
+						},
+					},
+				},
+			})
+		}))
+
+		testutil.Ok(t, i.WaitSumMetricsWithOptions(e2emon.Equals(float64(attempts)), []string{"grpc_server_handled_total"}, e2emon.WaitMissingMetrics()))
+	})
+
+	t.Run("capnp", func(t *testing.T) {
+		e, err := e2e.NewDockerEnvironment("receive-mctenant")
+		testutil.Ok(t, err)
+		t.Cleanup(e2ethanos.CleanScenario(t, e))
+
+		i := e2ethanos.NewReceiveBuilder(e, "ingestor").WithIngestionEnabled().Init()
+		testutil.Ok(t, e2e.StartAndWaitReady(i))
+
+		h := receive.HashringConfig{
+			TenantMatcherType: "glob",
+			Tenants: []string{
+				"foo*",
+			},
+			Endpoints: []receive.Endpoint{
+				{Address: i.InternalEndpoint("grpc"), CapNProtoAddress: i.InternalEndpoint("capnp")},
+			},
+		}
+
+		r := e2ethanos.NewReceiveBuilder(e, "router").UseCapnpReplication().WithRouting(1, h).Init()
+		testutil.Ok(t, e2e.StartAndWaitReady(r))
+
+		ts := time.Now()
+
+		var attempts int
+		require.NoError(t, runutil.RetryWithLog(logkit.NewLogfmtLogger(os.Stdout), 1*time.Second, make(<-chan struct{}), func() error {
+			attempts++
+			return storeWriteRequest(context.Background(), "http://"+r.Endpoint("remote-write")+"/api/v1/receive", &prompb.WriteRequest{
+				Timeseries: []prompb.TimeSeries{
+					{
+						Labels: []prompb.Label{
+							{Name: model.MetricNameLabel, Value: "myself"},
+							{Name: "thanos_tenant_id", Value: "foobar"},
+						},
+						Samples: []prompb.Sample{
+							{Value: 1, Timestamp: timestamp.FromTime(ts)},
+						},
+					},
+					{
+						Labels: []prompb.Label{
+							{Name: model.MetricNameLabel, Value: "myself"},
+							{Name: "thanos_tenant_id", Value: "foobaq"},
+						},
+						Samples: []prompb.Sample{
+							{Value: 1, Timestamp: timestamp.FromTime(ts)},
+						},
+					},
+				},
+			})
+		}))
+
+		testutil.Ok(t, i.WaitSumMetricsWithOptions(e2emon.Equals(float64(attempts)), []string{"thanos_receive_capnproto_handled_total"}, e2emon.WaitMissingMetrics()))
+	})
+
+}
+
 func TestReceiveCpnp(t *testing.T) {
 	e, err := e2e.NewDockerEnvironment("receive-cpnp")
 	testutil.Ok(t, err)
@@ -1264,5 +1377,123 @@ func TestReceiveCpnp(t *testing.T) {
 			Value: 1,
 		},
 	}, v)
+
+}
+
+func TestExpandedCache(t *testing.T) {
+	t.Parallel()
+
+	t.Skip("This takes a long time and uses lots of resources.")
+
+	e, err := e2e.NewDockerEnvironment("expanded-cache")
+	testutil.Ok(t, err)
+	t.Cleanup(e2ethanos.CleanScenario(t, e))
+
+	i1 := e2ethanos.NewReceiveBuilder(e, "ingestor1").WithIngestionEnabled().WithExpandedPostingsCache().Init()
+	testutil.Ok(t, e2e.StartAndWaitReady(i1))
+
+	q1 := e2ethanos.NewQuerierBuilder(e, "1", i1.InternalEndpoint("grpc")).Init()
+	testutil.Ok(t, e2e.StartAndWaitReady(q1))
+
+	i2 := e2ethanos.NewReceiveBuilder(e, "ingestor2").WithIngestionEnabled().Init()
+	testutil.Ok(t, e2e.StartAndWaitReady(i2))
+
+	q2 := e2ethanos.NewQuerierBuilder(e, "2", i2.InternalEndpoint("grpc")).Init()
+	testutil.Ok(t, e2e.StartAndWaitReady(q2))
+
+	avalanche1 := e2ethanos.NewAvalanche(e, "avalanche-1",
+		e2ethanos.AvalancheOptions{
+			MetricCount:    "500",
+			SeriesCount:    "500",
+			MetricInterval: "3600",
+			SeriesInterval: "30",
+			ValueInterval:  "30",
+
+			RemoteURL:           e2ethanos.RemoteWriteEndpoint(i1.InternalEndpoint("remote-write")),
+			RemoteWriteInterval: "10s",
+			RemoteBatchSize:     "1000",
+			RemoteRequestCount:  "5000",
+
+			TenantID: "test-tenant",
+		})
+	avalanche2 := e2ethanos.NewAvalanche(e, "avalanche-2",
+		e2ethanos.AvalancheOptions{
+			MetricCount:    "500",
+			SeriesCount:    "500",
+			MetricInterval: "3600",
+			SeriesInterval: "30",
+			ValueInterval:  "30",
+
+			RemoteURL:           e2ethanos.RemoteWriteEndpoint(i2.InternalEndpoint("remote-write")),
+			RemoteWriteInterval: "10s",
+			RemoteBatchSize:     "1000",
+			RemoteRequestCount:  "5000",
+
+			TenantID: "test-tenant",
+		})
+
+	testutil.Ok(t, e2e.StartAndWaitReady(avalanche1, avalanche2))
+
+	ss := []labels.Labels{
+		labels.FromStrings(model.MetricNameLabel, "avalanche_metric_mmmmm_0_110", "cycle_id", "0"),
+	}
+
+	rnd := rand.New(rand.NewSource(time.Now().Unix()))
+	opts := []promqlsmith.Option{
+		promqlsmith.WithEnableOffset(false),
+		promqlsmith.WithEnableAtModifier(false),
+	}
+
+	time.Sleep(60 * time.Second)
+
+	f := make(chan error)
+	for i := 0; i < 10; i++ {
+		go func() {
+			cl := promclient.NewDefaultClient()
+			for {
+				ps := promqlsmith.New(rnd, ss, opts...)
+
+				qry := ps.WalkInstantQuery()
+
+				tm := time.Now()
+
+				t.Log(qry.String())
+
+				res1, _, _, err := cl.QueryInstant(context.Background(), urlParse(t, "http://"+q1.Endpoint("http")), qry.String(), tm, promclient.QueryOptions{
+					Deduplicate: false,
+				})
+				if err != nil && (strings.Contains(err.Error(), "unknown response type") || strings.Contains(err.Error(), "overflows int64")) {
+					continue
+				}
+				testutil.Ok(t, err)
+
+				res2, _, _, err := cl.QueryInstant(context.Background(), urlParse(t, "http://"+q2.Endpoint("http")), qry.String(), tm, promclient.QueryOptions{
+					Deduplicate: false,
+				})
+
+				testutil.Ok(t, err)
+
+				for _, s := range res1 {
+					s.Value = 0
+				}
+				for _, s := range res2 {
+					s.Value = 0
+				}
+
+				if !res1.Equal(res2) {
+					f <- fmt.Errorf("Results are not equal %v %v %v", qry.String(), res1, res2)
+				}
+			}
+		}()
+	}
+
+	for {
+		select {
+		case err := <-f:
+			t.Fatal(err)
+		default:
+		}
+		time.Sleep(10 * time.Second)
+	}
 
 }

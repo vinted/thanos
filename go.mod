@@ -117,6 +117,7 @@ require (
 )
 
 require (
+	github.com/segmentio/fasthash v1.0.3
 	github.com/tjhop/slog-gokit v0.1.3
 	go.opentelemetry.io/collector/pdata v1.22.0
 	go.opentelemetry.io/collector/semconv v0.116.0
@@ -209,7 +210,7 @@ require (
 	github.com/gobwas/pool v0.2.1 // indirect
 	github.com/gobwas/ws v1.2.1 // indirect
 	github.com/gofrs/flock v0.8.1 // indirect
-	github.com/gogo/googleapis v1.4.0 // indirect
+	github.com/gogo/googleapis v1.4.0
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/google/pprof v0.0.0-20241210010833-40e02aabc2ad // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.4 // indirect

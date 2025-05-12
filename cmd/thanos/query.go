@@ -66,7 +66,7 @@ func registerQuery(app *extkingpin.App) {
 	httpBindAddr, httpGracePeriod, httpTLSConfig := extkingpin.RegisterHTTPFlags(cmd)
 
 	var grpcServerConfig grpcConfig
-	grpcServerConfig.registerFlag(cmd)
+	grpcServerConfig.registerFlag(cmd, false)
 
 	var grpcClientConfig grpcClientConfig
 	grpcClientConfig.registerFlag(cmd)
