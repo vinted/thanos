@@ -285,6 +285,8 @@ replace (
 	// Required by Cortex https://github.com/cortexproject/cortex/pull/3051.
 	github.com/bradfitz/gomemcache => github.com/themihai/gomemcache v0.0.0-20180902122335-24332e2d58ab
 
+	github.com/prometheus/prometheus => github.com/vinted/prometheus v0.0.0-20250512072611-686c5abf4bef
+
 	// Pin kuberesolver/v5 to support new grpc version. Need to upgrade kuberesolver version on weaveworks/common.
 	github.com/sercand/kuberesolver/v4 => github.com/sercand/kuberesolver/v5 v5.1.1
 

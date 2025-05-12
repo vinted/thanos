@@ -2179,8 +2179,6 @@ github.com/prometheus/procfs v0.8.0/go.mod h1:z7EfXMXOkbkqb9IINtpCn86r/to3BnA0ua
 github.com/prometheus/procfs v0.9.0/go.mod h1:+pB4zwohETzFnmlpe6yd2lSc+0/46IYZRB/chUwxUZY=
 github.com/prometheus/procfs v0.15.1 h1:YagwOFzUgYfKKHX6Dr+sHT7km/hxC76UB0learggepc=
 github.com/prometheus/procfs v0.15.1/go.mod h1:fB45yRUv8NstnjriLhBQLuOUt+WW4BsoGhij/e3PBqk=
-github.com/prometheus/prometheus v0.301.0 h1:0z8dgegmILivNomCd79RKvVkIols8vBGPKmcIBc7OyY=
-github.com/prometheus/prometheus v0.301.0/go.mod h1:BJLjWCKNfRfjp7Q48DrAjARnCi7GhfUVvUFEAWTssZM=
 github.com/prometheus/sigv4 v0.1.0 h1:FgxH+m1qf9dGQ4w8Dd6VkthmpFQfGTzUeavMoQeG1LA=
 github.com/prometheus/sigv4 v0.1.0/go.mod h1:doosPW9dOitMzYe2I2BN0jZqUuBrGPbXrNsTScN18iU=
 github.com/redis/go-redis/v9 v9.6.1 h1:HHDteefn6ZkTtY5fGUE8tj8uy85AHk6zP7CpzIAM0y4=
@@ -2281,6 +2279,8 @@ github.com/uber/jaeger-client-go v2.30.0+incompatible/go.mod h1:WVhlPFC8FDjOFMMW
 github.com/uber/jaeger-lib v2.2.0+incompatible/go.mod h1:ComeNDZlWwrWnDv8aPp0Ba6+uUTzImX/AauajbLI56U=
 github.com/uber/jaeger-lib v2.4.1+incompatible h1:td4jdvLcExb4cBISKIpHuGoVXh+dVKhn2Um6rjCsSsg=
 github.com/uber/jaeger-lib v2.4.1+incompatible/go.mod h1:ComeNDZlWwrWnDv8aPp0Ba6+uUTzImX/AauajbLI56U=
+github.com/vinted/prometheus v0.0.0-20250512072611-686c5abf4bef h1:ENbk0MzOeAFsgpOoC++bBuDdyI2J58t+UvSzD7dx0aQ=
+github.com/vinted/prometheus v0.0.0-20250512072611-686c5abf4bef/go.mod h1:BJLjWCKNfRfjp7Q48DrAjARnCi7GhfUVvUFEAWTssZM=
 github.com/vultr/govultr/v2 v2.17.2 h1:gej/rwr91Puc/tgh+j33p/BLR16UrIPnSr+AIwYWZQs=
 github.com/vultr/govultr/v2 v2.17.2/go.mod h1:ZFOKGWmgjytfyjeyAdhQlSWwTjh2ig+X49cAp50dzXI=
 github.com/weaveworks/common v0.0.0-20230728070032-dd9e68f319d5 h1:nORobjToZAvi54wcuUXLq+XG2Rsr0XEizy5aHBHvqWQ=
