@@ -106,6 +106,10 @@ func registerQuery(app *extkingpin.App) {
 
 	queryReplicaLabels := cmd.Flag("query.replica-label", "Labels to treat as a replica indicator along which data is deduplicated. Still you will be able to query without deduplication using 'dedup=false' parameter. Data includes time series, recording rules, and alerting rules. Flag may be specified multiple times as well as a comma separated list of labels.").
 		Strings()
+
+	queryReplicaRmLabels := cmd.Flag("query.rm-replica-label", "Replica labels to delete from QueryAPI calls. Experimental.").
+		Strings()
+
 	queryPartitionLabels := cmd.Flag("query.partition-label", "Labels that partition the leaf queriers. This is used to scope down the labelsets of leaf queriers when using the distributed query mode. If set, these labels must form a partition of the leaf queriers. Partition labels must not intersect with replica labels. Every TSDB of a leaf querier must have these labels. This is useful when there are multiple external labels that are irrelevant for the partition as it allows the distributed engine to ignore them for some optimizations. If this is empty then all labels are used as partition labels.").Strings()
 
 	// currently, we choose the highest MinT of an engine when querying multiple engines. This flag allows to change this behavior to choose the lowest MinT.
@@ -337,6 +341,7 @@ func registerQuery(app *extkingpin.App) {
 			*enforceTenancy,
 			*tenantLabel,
 			*queryDistributedWithOverlappingInterval,
+			*queryReplicaRmLabels,
 		)
 	})
 }
@@ -399,6 +404,7 @@ func runQuery(
 	enforceTenancy bool,
 	tenantLabel string,
 	queryDistributedWithOverlappingInterval bool,
+	queryReplicaRmLabels []string,
 ) error {
 	comp := component.Query
 	if alertQueryURL == "" {
@@ -590,7 +596,12 @@ func runQuery(
 		)
 
 		defaultEngineType := querypb.EngineType(querypb.EngineType_value[string(defaultEngine)])
-		grpcAPI := apiv1.NewGRPCAPI(time.Now, queryReplicaLabels, queryableCreator, remoteEndpointsCreator, queryCreator, defaultEngineType, lookbackDeltaCreator, instantDefaultMaxSourceResolution)
+
+		rmReplicaLabels := map[string]struct{}{}
+		for _, label := range queryReplicaRmLabels {
+			rmReplicaLabels[label] = struct{}{}
+		}
+		grpcAPI := apiv1.NewGRPCAPI(time.Now, queryReplicaLabels, rmReplicaLabels, queryableCreator, remoteEndpointsCreator, queryCreator, defaultEngineType, lookbackDeltaCreator, instantDefaultMaxSourceResolution)
 		s := grpcserver.New(logger, reg, tracer, grpcLogOpts, logFilterMethods, comp, grpcProbe,
 			grpcserver.WithServer(apiv1.RegisterQueryServer(grpcAPI)),
 			grpcserver.WithServer(store.RegisterStoreServer(seriesProxy, logger)),

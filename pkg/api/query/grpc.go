@@ -33,11 +33,13 @@ type GRPCAPI struct {
 	defaultEngine               querypb.EngineType
 	lookbackDeltaCreate         func(int64) time.Duration
 	defaultMaxResolutionSeconds time.Duration
+	rmReplicaLabels             map[string]struct{}
 }
 
 func NewGRPCAPI(
 	now func() time.Time,
 	replicaLabels []string,
+	rmReplicaLabels map[string]struct{},
 	queryableCreator query.QueryableCreator,
 	remoteEndpointsCreator query.RemoteEndpointsCreator,
 	queryCreator queryCreator,
@@ -54,6 +56,7 @@ func NewGRPCAPI(
 		defaultEngine:               defaultEngine,
 		lookbackDeltaCreate:         lookbackDeltaCreate,
 		defaultMaxResolutionSeconds: defaultMaxResolutionSeconds,
+		rmReplicaLabels:             rmReplicaLabels,
 	}
 }
 
@@ -88,9 +91,16 @@ func (g *GRPCAPI) Query(request *querypb.QueryRequest, server querypb.Query_Quer
 		replicaLabels = request.ReplicaLabels
 	}
 
+	rlabels := make([]string, 0, len(replicaLabels))
+	for _, lbl := range replicaLabels {
+		if _, ok := g.rmReplicaLabels[lbl]; !ok {
+			rlabels = append(rlabels, lbl)
+		}
+	}
+
 	queryable := g.queryableCreate(
 		request.EnableDedup,
-		replicaLabels,
+		rlabels,
 		storeMatchers,
 		maxResolution,
 		request.EnablePartialResponse,
@@ -100,7 +110,7 @@ func (g *GRPCAPI) Query(request *querypb.QueryRequest, server querypb.Query_Quer
 	)
 
 	remoteEndpoints := g.remoteEndpointsCreate(
-		replicaLabels,
+		rlabels,
 		request.EnablePartialResponse,
 	)
 
@@ -186,9 +196,16 @@ func (g *GRPCAPI) QueryRange(request *querypb.QueryRangeRequest, srv querypb.Que
 		replicaLabels = request.ReplicaLabels
 	}
 
+	rlabels := make([]string, 0, len(replicaLabels))
+	for _, lbl := range replicaLabels {
+		if _, ok := g.rmReplicaLabels[lbl]; !ok {
+			rlabels = append(rlabels, lbl)
+		}
+	}
+
 	queryable := g.queryableCreate(
 		request.EnableDedup,
-		replicaLabels,
+		rlabels,
 		storeMatchers,
 		maxResolution,
 		request.EnablePartialResponse,
@@ -198,7 +215,7 @@ func (g *GRPCAPI) QueryRange(request *querypb.QueryRangeRequest, srv querypb.Que
 	)
 
 	remoteEndpoints := g.remoteEndpointsCreate(
-		replicaLabels,
+		rlabels,
 		request.EnablePartialResponse,
 	)
 
