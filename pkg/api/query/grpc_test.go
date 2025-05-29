@@ -35,7 +35,7 @@ func TestGRPCQueryAPIWithQueryPlan(t *testing.T) {
 	queryableCreator := query.NewQueryableCreator(logger, reg, proxy, 1, 1*time.Minute, dedup.AlgorithmPenalty)
 	remoteEndpointsCreator := query.NewRemoteEndpointsCreator(logger, func() []query.Client { return nil }, nil, 1*time.Minute, true, true)
 	lookbackDeltaFunc := func(i int64) time.Duration { return 5 * time.Minute }
-	api := NewGRPCAPI(time.Now, nil, queryableCreator, remoteEndpointsCreator, queryFactory, querypb.EngineType_thanos, lookbackDeltaFunc, 0)
+	api := NewGRPCAPI(time.Now, nil, nil, queryableCreator, remoteEndpointsCreator, queryFactory, querypb.EngineType_thanos, lookbackDeltaFunc, 0)
 
 	expr, err := extpromql.ParseExpr("metric")
 	testutil.Ok(t, err)
@@ -98,7 +98,7 @@ func TestGRPCQueryAPIErrorHandling(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		api := NewGRPCAPI(time.Now, nil, queryableCreator, remoteEndpointsCreator, test.queryCreator, querypb.EngineType_prometheus, lookbackDeltaFunc, 0)
+		api := NewGRPCAPI(time.Now, nil, nil, queryableCreator, remoteEndpointsCreator, test.queryCreator, querypb.EngineType_prometheus, lookbackDeltaFunc, 0)
 		t.Run("range_query", func(t *testing.T) {
 			rangeRequest := &querypb.QueryRangeRequest{
 				Query:            "metric",
