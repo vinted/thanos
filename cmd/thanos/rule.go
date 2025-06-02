@@ -144,6 +144,8 @@ func registerRule(app *extkingpin.App) {
 	noLockFile := cmd.Flag("tsdb.no-lockfile", "Do not create lockfile in TSDB data directory. In any case, the lockfiles will be deleted on next startup.").Default("false").Bool()
 	walCompression := cmd.Flag("tsdb.wal-compression", "Compress the tsdb WAL.").Default("true").Bool()
 
+	maxSourceResolution := cmd.Flag("query.max-source-resolution", "Maximum source resolution for queries. This is used to limit the maximum resolution of data that can be queried from the query nodes.").Default("").String()
+
 	cmd.Flag("data-dir", "data directory").Default("data/").StringVar(&conf.dataDir)
 	cmd.Flag("rule-file", "Rule files that should be used by rule manager. Can be in glob format (repeated). Note that rules are not automatically detected, use SIGHUP or do HTTP POST /-/reload to re-read them.").
 		Default("rules/").StringsVar(&conf.ruleFiles)
@@ -258,6 +260,7 @@ func registerRule(app *extkingpin.App) {
 			logFilterMethods,
 			tsdbOpts,
 			agentOpts,
+			*maxSourceResolution,
 		)
 	})
 }
@@ -322,6 +325,7 @@ func runRule(
 	logFilterMethods []string,
 	tsdbOpts *tsdb.Options,
 	agentOpts *agent.Options,
+	maxSourceResolution string,
 ) error {
 	metrics := newRuleMetrics(reg)
 
@@ -632,7 +636,7 @@ func runRule(
 			reg,
 			conf.dataDir,
 			managerOpts,
-			queryFuncCreator(logger, queryClients, promClients, grpcEndpointSet, metrics.duplicatedQuery, metrics.ruleEvalWarnings, conf.query.httpMethod, conf.query.doNotAddThanosParams),
+			queryFuncCreator(logger, queryClients, promClients, grpcEndpointSet, metrics.duplicatedQuery, metrics.ruleEvalWarnings, conf.query.httpMethod, conf.query.doNotAddThanosParams, maxSourceResolution),
 			conf.lset,
 			// In our case the querying URL is the external URL because in Prometheus
 			// --web.external-url points to it i.e. it points at something where the user
@@ -891,6 +895,7 @@ func queryFuncCreator(
 	ruleEvalWarnings *prometheus.CounterVec,
 	httpMethod string,
 	doNotAddThanosParams bool,
+	maxSourceResolution string,
 ) func(partialResponseStrategy storepb.PartialResponseStrategy) rules.QueryFunc {
 
 	// queryFunc returns query function that hits the HTTP query API of query peers in randomized order until we get a result
@@ -919,6 +924,7 @@ func queryFuncCreator(
 						PartialResponseStrategy: partialResponseStrategy,
 						Method:                  httpMethod,
 						DoNotAddThanosParams:    doNotAddThanosParams,
+						MaxSourceResolution:     maxSourceResolution,
 					})
 					span.Finish()
 
