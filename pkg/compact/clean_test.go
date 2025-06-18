@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"math/rand"
 	"path"
 	"testing"
 	"time"
@@ -89,7 +90,7 @@ func TestBestEffortCleanAbortedPartialUploads(t *testing.T) {
 
 func TestGetLastModifiedTime(t *testing.T) {
 	now := time.Now().UTC()
-	u := ulid.MustNewDefault(now)
+	u := ulid.MustNew(uint64(now.UnixMilli()), rand.New(rand.NewSource(0)))
 	tm, err := getOldestModifiedTime(context.Background(), u, objstore.NewInMemBucket())
 	testutil.NotOk(t, err)
 	// NOTE(GiedriusS): ULIDs use millisecond precision.
