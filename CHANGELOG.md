@@ -10,6 +10,107 @@ We use *breaking :warning:* to mark changes that are not backward compatible (re
 
 ## Unreleased
 - [#8190](https://github.com/thanos-io/thanos/pull/8190) Fix markdown formatting in CHANGELOG.
+
+### Fixed
+
+- [#8400](https://github.com/thanos-io/thanos/pull/8400) quickstart.sh: Update `thanos query` flag `--store` to `--endpoint`
+
+### Added
+
+- [#8366](https://github.com/thanos-io/thanos/pull/8366) Store: optionally ignore Parquet migrated blocks
+- [#8359](https://github.com/thanos-io/thanos/pull/8359) Tools: add `--shipper.upload-compacted` flag for uploading compacted blocks to bucket upload-blocks
+
+### Changed
+
+- [#8370](https://github.com/thanos-io/thanos/pull/8370) Query: announced labelset now reflects relabel-config
+
+### Removed
+
+### [v0.39.2](https://github.com/thanos-io/thanos/tree/release-0.39) - 2025 07 17
+
+### Fixed
+
+- [#8374](https://github.com/thanos-io/thanos/pull/8374) Query: fix panic when concurrently accessing annotations map
+- [#8375](https://github.com/thanos-io/thanos/pull/8375) Query: fix native histogram buckets in distributed queries
+
+### [v0.39.1](https://github.com/thanos-io/thanos/tree/release-0.39) - 2025 07 01
+
+Fixes a memory leak issue on query-frontend. The bug only affects v0.39.0.
+
+### Fixed
+
+- [#8349](https://github.com/thanos-io/thanos/pull/8349) Query-Frontend: properly clean up resources
+- [#8338](https://github.com/thanos-io/thanos/pull/8338) Query-Frontend: use original roundtripper + close immediately
+
+## [v0.39.0](https://github.com/thanos-io/thanos/tree/release-0.39) - 2025 06 25
+
+In short: there are a bunch of fixes and small improvements. The shining items in this release are memory usage improvements in Thanos Query and shuffle sharding support in Thanos Receiver. Information about shuffle sharding support is available in the documentation. Thank you to all contributors!
+
+### Added
+
+- [#8308](https://github.com/thanos-io/thanos/pull/8308) Receive: Prometheus counters for pending write requests and series requests
+- [#8225](https://github.com/thanos-io/thanos/pull/8225) tools: Extend bucket ls options.
+- [#8238](https://github.com/thanos-io/thanos/pull/8238) Receive: add shuffle sharding support
+- [#8284](https://github.com/thanos-io/thanos/pull/8284) Store: Add `--disable-admin-operations` Flag to Store Gateway
+- [#8245](https://github.com/thanos-io/thanos/pull/8245) Querier/Query-Frontend/Ruler: Add `--enable-feature=promql-experimental-functions` flag option to enable using promQL experimental functions in respective Thanos components
+- [#8259](https://github.com/thanos-io/thanos/pull/8259) Shipper: Add `--shipper.skip-corrupted-blocks` flag to allow `Sync()` to continue upload when finding a corrupted block
+
+### Changed
+
+- [#8282](https://github.com/thanos-io/thanos/pull/8282) Force sync writes to meta.json in case of host crash
+- [#8192](https://github.com/thanos-io/thanos/pull/8192) Sidecar: fix default get config timeout
+=======
+
+### Fixed
+
+- [#8334](https://github.com/thanos-io/thanos/pull/8334) Query: wait for initial endpoint discovery before becoming ready
+- [#8400](https://github.com/thanos-io/thanos/pull/8400) quickstart.sh: Update `thanos query` flag `--store` to `--endpoint`
+
+### Added
+
+- [#8366](https://github.com/thanos-io/thanos/pull/8366) Store: optionally ignore Parquet migrated blocks
+- [#8359](https://github.com/thanos-io/thanos/pull/8359) Tools: add `--shipper.upload-compacted` flag for uploading compacted blocks to bucket upload-blocks
+
+### Changed
+
+- [#8370](https://github.com/thanos-io/thanos/pull/8370) Query: announced labelset now reflects relabel-config
+
+### Removed
+
+### [v0.39.2](https://github.com/thanos-io/thanos/tree/release-0.39) - 2025 07 17
+
+### Fixed
+
+- [#8374](https://github.com/thanos-io/thanos/pull/8374) Query: fix panic when concurrently accessing annotations map
+- [#8375](https://github.com/thanos-io/thanos/pull/8375) Query: fix native histogram buckets in distributed queries
+
+### [v0.39.1](https://github.com/thanos-io/thanos/tree/release-0.39) - 2025 07 01
+
+Fixes a memory leak issue on query-frontend. The bug only affects v0.39.0.
+
+### Fixed
+
+- [#8349](https://github.com/thanos-io/thanos/pull/8349) Query-Frontend: properly clean up resources
+- [#8338](https://github.com/thanos-io/thanos/pull/8338) Query-Frontend: use original roundtripper + close immediately
+
+## [v0.39.0](https://github.com/thanos-io/thanos/tree/release-0.39) - 2025 06 25
+
+In short: there are a bunch of fixes and small improvements. The shining items in this release are memory usage improvements in Thanos Query and shuffle sharding support in Thanos Receiver. Information about shuffle sharding support is available in the documentation. Thank you to all contributors!
+
+### Added
+
+- [#8308](https://github.com/thanos-io/thanos/pull/8308) Receive: Prometheus counters for pending write requests and series requests
+- [#8225](https://github.com/thanos-io/thanos/pull/8225) tools: Extend bucket ls options.
+- [#8238](https://github.com/thanos-io/thanos/pull/8238) Receive: add shuffle sharding support
+- [#8284](https://github.com/thanos-io/thanos/pull/8284) Store: Add `--disable-admin-operations` Flag to Store Gateway
+- [#8245](https://github.com/thanos-io/thanos/pull/8245) Querier/Query-Frontend/Ruler: Add `--enable-feature=promql-experimental-functions` flag option to enable using promQL experimental functions in respective Thanos components
+- [#8259](https://github.com/thanos-io/thanos/pull/8259) Shipper: Add `--shipper.skip-corrupted-blocks` flag to allow `Sync()` to continue upload when finding a corrupted block
+
+### Changed
+
+- [#8282](https://github.com/thanos-io/thanos/pull/8282) Force sync writes to meta.json in case of host crash
+- [#8192](https://github.com/thanos-io/thanos/pull/8192) Sidecar: fix default get config timeout
+>>>>>>> 0acf54d9e (Merge pull request #8334 from pedro-stanaka/feat/query-check-endpoints-on-startup)
 - [#8202](https://github.com/thanos-io/thanos/pull/8202) Receive: Unhide `--tsdb.enable-native-histograms` flag
 - [#8225](https://github.com/thanos-io/thanos/pull/8225) tools: Extend bucket ls options.
 
