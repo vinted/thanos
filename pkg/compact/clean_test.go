@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"math/rand"
 	"path"
 	"testing"
 	"time"
@@ -85,4 +86,13 @@ func TestBestEffortCleanAbortedPartialUploads(t *testing.T) {
 	exists, err = bkt.Exists(ctx, path.Join(shouldIgnoreID2.String(), "chunks", "000001"))
 	testutil.Ok(t, err)
 	testutil.Equals(t, true, exists)
+}
+
+func TestGetLastModifiedTime(t *testing.T) {
+	now := time.Now().UTC()
+	u := ulid.MustNew(uint64(now.UnixMilli()), rand.New(rand.NewSource(0)))
+	tm, err := getOldestModifiedTime(context.Background(), u, objstore.NewInMemBucket())
+	testutil.NotOk(t, err)
+	// NOTE(GiedriusS): ULIDs use millisecond precision.
+	testutil.Equals(t, now.Truncate(time.Second), tm.Truncate(time.Second))
 }
